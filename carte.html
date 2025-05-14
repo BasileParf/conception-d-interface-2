@@ -1,63 +1,326 @@
-<style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; font-family: 'Satoshi', sans-serif; overflow: hidden; }
-    .video-blur { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; backdrop-filter: blur(55.5px); -webkit-backdrop-filter: blur(55.5px); z-index: 0; }
-    #background-video { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; width: auto; height: auto; object-fit: cover; z-index: -1; }
-    .page-wrapper { height: 100vh; width: 100vw; border: 12px solid #A279FE; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 20px; z-index: 1; overflow-y: auto; }
-    .game-container { padding: 20px; border-radius: 15px; text-align: center; width: 100%; max-width: 100%; color: black; display: flex; flex-direction: column; align-items: center; }
-    h1.game-title { font-size: 2.2rem; font-weight: 700; color: black; line-height: 1.3; margin-bottom: 15px; position: relative; display: inline-block; }
-    .highlight span { position: relative; z-index: 1; }
-    .highlight::after { content: ''; position: absolute; left: 0; bottom: 0.1em; width: 100%; height: 0.5em; background: #A279FE; box-shadow: 0 0 6px #A279FE, 0 0 10px #A279FE; z-index: 0; border-radius: 3px;}
-    .instructions { color: #1c1c1c; margin-bottom: 20px; font-size: 0.95em; line-height: 1.5; max-width: 800px; }
-    #game-board { display: flex; justify-content: space-around; align-items: stretch; width: 100%; gap: 15px; margin-bottom: 25px; }
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Défi Floral - Cartes Agrandies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satoshi:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     
-    .card-wrapper { 
-        flex: 1; min-width: 0; display: flex; flex-direction: column;
-        align-items: center; justify-content: space-between; 
-        padding: 10px 5px; background-color: transparent; 
-        /* border: 3px solid transparent; */ /* Bordure transparente enlevée pour l'effet néon */
-        border-radius: 12px; 
-        cursor: pointer; 
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Ajout de box-shadow à la transition */
-        position: relative; /* Utile pour le z-index et positionnement potentiel de pseudo-éléments */
-    }
-    .card-wrapper:hover { 
-        transform: translateY(-3px) scale(1.01); 
-    }
-    .card-wrapper.selected { 
-        /* border-color: #A279FE; */ /* Bordure violette enlevée */
-        box-shadow: 
-            0 0 5px rgba(162, 121, 254, 0.9),
-            0 0 10px rgba(162, 121, 254, 0.7),
-            0 0 20px rgba(162, 121, 254, 0.5),
-            0 0 35px 5px rgba(162, 121, 254, 0.3);
-        transform: scale(1.03) translateY(-2px); /* Scale légèrement augmenté pour le néon */
-        z-index: 5; /* Pour que la carte sélectionnée et son néon soient au-dessus */
-    }
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
-    model-viewer { 
-        width: 95%; height: 30vh; max-height: 280px; min-height: 180px; 
-        border-radius: 8px; background-color: transparent; 
-        position: relative; /* Pour s'assurer qu'il est au-dessus du box-shadow du parent */
-        z-index: 1; /* Pour être au-dessus du néon du card-wrapper */
-    }
-    .card-name { margin-top: 10px; font-weight: 700; color: black; text-transform: uppercase; font-size: clamp(0.7em, 1.5vw, 0.85em); padding: 5px 0; }
-    #message-area { margin-top: 15px; padding: 15px 20px; background-color: rgba(0, 0, 0, 0.05); border-radius: 10px; min-height: 60px; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(0,0,0,0.1); }
-    #feedback-message { font-size: 1.2em; color: black; font-weight: 700; line-height: 1.4; }
-    #feedback-message.success { color: #28a745; }
-    #feedback-message.error { color: #dc3545; }
-    
-    .card-wrapper.matched { 
-        opacity: 0.7; 
-        cursor: default; 
-        /* border-color: #A279FE; */ /* Plus de bordure colorée pour matched si on utilise le néon ailleurs */
-        box-shadow: none; /* S'assurer que le néon disparaît */
-    }
-    .card-wrapper.matched:hover { transform: none; }
-    .card-wrapper.matched.selected { /* Cet état ne devrait plus être actif longtemps */
-        transform: scale(1);
-        box-shadow: none; 
-    }
-    .touch-icon { position: fixed; bottom: 30px; left: 30px; width: 100px; opacity: 0.5; animation: pulseSmooth 10s ease-in-out infinite; z-index: 10; }
-    @keyframes pulseSmooth { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-</style>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; font-family: 'Satoshi', sans-serif; overflow: hidden; }
+        .video-blur { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; backdrop-filter: blur(55.5px); -webkit-backdrop-filter: blur(55.5px); z-index: 0; }
+        #background-video { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; width: auto; height: auto; object-fit: cover; z-index: -1; }
+        .page-wrapper { 
+            height: 100vh; width: 100vw; border: 12px solid #A279FE; 
+            display: flex; /* Maintenir flex pour centrer .game-container */
+            flex-direction: column; 
+            justify-content: center; /* Centrer verticalement */
+            align-items: center; /* Centrer horizontalement */
+            position: relative; 
+            padding: 20px; /* Garder un padding général */
+            z-index: 1; 
+            overflow-y: auto; 
+        }
+        .game-container { 
+            /* padding: 10px; /* Réduire le padding si le game-board prend toute la place */
+            border-radius: 15px; 
+            text-align: center; 
+            width: 100%; 
+            max-width: 100%; 
+            color: black; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center; /* Centrer le game-board verticalement dans ce conteneur */
+            flex-grow: 1; /* Permettre au game-container de prendre la hauteur disponible */
+        }
+        
+        /* Titre et instructions seront commentés/supprimés du HTML */
+        /* h1.game-title { font-size: 2.2rem; font-weight: 700; color: black; line-height: 1.3; margin-bottom: 15px; position: relative; display: inline-block; }
+        .highlight span { position: relative; z-index: 1; }
+        .highlight::after { content: ''; position: absolute; left: 0; bottom: 0.1em; width: 100%; height: 0.5em; background: #A279FE; box-shadow: 0 0 6px #A279FE, 0 0 10px #A279FE; z-index: 0; border-radius: 3px;}
+        .instructions { color: #1c1c1c; margin-bottom: 20px; font-size: 0.95em; line-height: 1.5; max-width: 800px; } */
+        
+        #game-board { 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; /* Centrer verticalement les cartes */
+            width: 100%; 
+            gap: 20px; /* Ajuster l'espacement entre les cartes agrandies */
+            margin-bottom: 20px; /* Un peu de marge en bas */
+        }
+        
+        @keyframes levitate {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); } /* Amplitude de lévitation un peu augmentée */
+        }
+
+        .card-wrapper { 
+            flex: 1; 
+            max-width: 24%; /* Pour 4 cartes, avec un peu de gap. Ajuster si plus/moins de cartes. */
+            min-width: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; 
+            /* padding: 5px; */ /* Retiré car le model-viewer prendra presque tout l'espace */
+            background-color: transparent; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: transform 0.3s ease; 
+            position: relative; 
+        }
+        .card-wrapper:hover { 
+            transform: translateY(-5px) scale(1.02); 
+        }
+        .card-wrapper.selected { 
+            transform: scale(1.03) translateY(-5px); 
+            z-index: 5; 
+        }
+
+        model-viewer { 
+            width: 100%;  /* Le model-viewer prend toute la largeur de son card-wrapper */
+            height: 55vh; /* Hauteur considérablement augmentée, basée sur la hauteur du viewport */
+            max-height: 450px; /* Limite max de hauteur */
+            min-height: 250px; /* Limite min de hauteur */
+            border-radius: 10px; 
+            background-color: transparent; 
+            position: relative; 
+            z-index: 1; 
+            transition: filter 0.3s ease-in-out; 
+            filter: drop-shadow(0px 12px 10px rgba(0, 0, 0, 0.2)) drop-shadow(0px 0px 0px rgba(162, 121, 254, 0)); 
+            animation: levitate 3.8s ease-in-out infinite; /* Vitesse de lévitation légèrement ajustée */
+        }
+        
+        .card-wrapper:hover model-viewer {
+            animation-play-state: paused;
+        }
+
+        .card-wrapper.selected model-viewer {
+            animation-play-state: paused; 
+            filter: 
+                drop-shadow(0px 15px 12px rgba(0, 0, 0, 0.28)) 
+                drop-shadow(0px 0px 4px rgba(162, 121, 254, 0.95)) 
+                drop-shadow(0px 0px 10px rgba(162, 121, 254, 0.75)) 
+                drop-shadow(0px 0px 20px rgba(162, 121, 254, 0.55));
+        }
+        
+        /* Le .card-name est retiré */
+
+        #message-area { 
+            margin-top: 10px; /* Réduire marge si plus de place en haut */
+            padding: 15px 20px; background-color: rgba(0, 0, 0, 0.05); 
+            border-radius: 10px; min-height: 60px; display: flex; 
+            justify-content: center; align-items: center; border: 1px solid rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px; /* Centrer la zone de message */
+        }
+        #feedback-message { font-size: 1.2em; color: black; font-weight: 700; line-height: 1.4; }
+        #feedback-message.success { color: #28a745; }
+        #feedback-message.error { color: #dc3545; }
+        
+        .card-wrapper.matched model-viewer { 
+            animation: none; 
+            filter: drop-shadow(0px 8px 6px rgba(0, 0, 0, 0.15)); 
+        }
+        .card-wrapper.matched { 
+            opacity: 0.7; 
+            cursor: default; 
+        }
+        .card-wrapper.matched:hover { transform: none; }
+        .card-wrapper.matched.selected { 
+            transform: scale(1); 
+        }
+
+        .touch-icon { position: fixed; bottom: 30px; left: 30px; width: 100px; opacity: 0.5; animation: pulseSmooth 10s ease-in-out infinite; z-index: 10; }
+        @keyframes pulseSmooth { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    </style>
+</head>
+<body>
+    <div class="video-blur"></div>
+    <video autoplay muted loop playsinline id="background-video">
+        <source src="forme pour video_1.mp4" type="video/mp4">
+    </video>
+    <div class="page-wrapper">
+        <div class="game-container">
+            <!-- Titre et instructions retirés du HTML -->
+            <!-- <h1 class="game-title highlight"><span>Jeu de Mémoire Floral</span></h1> -->
+            <!-- <p class="instructions">Cliquez sur une carte pour la retourner. Ensuite, appuyez sur la flèche correspondante.</p> -->
+            
+            <div id="game-board">
+                <!-- Cartes insérées par JS -->
+            </div>
+            <div id="message-area">
+                <p id="feedback-message">Prêt à jouer !</p>
+            </div>
+        </div>
+        <svg class="touch-icon" xmlns="http://www.w3.org/2000/svg" width="400" height="557" viewBox="0 0 400 557" fill="none">
+            <path d="M378.212 333.976C368.215 323.978 355.276 318.671 342.154 318.051C341.536 304.931 336.227 291.991 326.23 281.993C316.225 271.988 303.276 266.675 290.151 266.051C289.898 260.658 288.807 255.309 286.968 250.171C315.048 247.307 342.048 235.035 362.822 214.261C411.579 165.507 411.584 86.182 362.835 37.4328C314.074 -11.3283 234.737 -11.335 185.981 37.421C152.034 71.3686 140.812 121.93 156.236 166.684L48.389 274.531C-15.9199 338.84 -15.9165 443.484 48.3975 507.798C112.717 572.117 217.366 572.126 281.675 507.817L378.211 411.281C399.525 389.967 399.525 355.288 378.212 333.976ZM211.309 62.7488C246.099 27.9585 302.71 27.9636 337.507 62.7606C372.291 97.5441 372.286 154.145 337.496 188.935C317.736 208.694 290.085 217.674 263.231 214.344L313.068 164.507C334.39 143.185 334.397 108.496 313.083 87.1816C291.759 65.8573 257.061 65.8556 235.739 87.1782L185.905 137.012C182.571 110.159 191.55 82.5078 211.309 62.7488ZM256.347 482.489C206.004 532.832 124.079 532.824 73.7253 482.471C23.377 432.122 23.3736 350.202 73.7168 299.859L189.271 184.305C189.716 183.903 190.14 183.48 190.539 183.037L261.068 112.508C268.425 105.151 280.398 105.153 287.757 112.511C295.105 119.86 295.099 131.824 287.742 139.181L196.926 229.997L169.148 257.774C162.155 264.768 162.155 276.108 169.148 283.102C176.142 290.096 187.482 290.096 194.476 283.102L222.254 255.324C229.603 247.976 241.559 247.974 248.906 255.321C256.252 262.668 256.249 274.622 248.901 281.971L221.123 309.749C214.129 316.743 214.129 328.083 221.123 335.076C228.117 342.07 239.457 342.07 246.451 335.076L274.228 307.299C281.577 299.95 293.545 299.96 300.907 307.322C308.255 314.671 308.255 326.629 300.907 333.977L273.129 361.755C266.135 368.749 266.135 380.089 273.129 387.083C280.123 394.077 291.463 394.077 298.457 387.083L326.235 359.305C333.583 351.957 345.541 351.957 352.89 359.305C360.236 366.652 360.235 378.608 352.886 385.957L256.347 482.489Z" fill="#A279FE" fill-opacity="0.27"/>
+        </svg>
+    </div>
+
+    <script>
+        // JavaScript identique à la version précédente (celle que vous avez validée comme "les cartes sont visible")
+        // Le nom de la carte sous le model-viewer est déjà retiré dans cette version.
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameBoard = document.getElementById('game-board');
+            const feedbackMessageEl = document.getElementById('feedback-message');
+            let activeCardData = null;
+            let activeCardElement = null;
+
+            const ORBIT_DEFAULT_THETA = 0; 
+            const ORBIT_SELECTED_THETA = 0;
+            const ORBIT_PHI = -10;         
+            const ORBIT_RADIUS_STRING = '150%'; 
+            const ORBIT_RADIUS_PERCENT = 150; 
+
+            const cardsData = [
+                { id: 'magnolia', name: 'MAGNOLIA', modelSrc: 'carte.glb', arrowKey: 'ArrowUp', matched: false, isFlipped: false, animOrientation: { yaw: 0, pitch: 0, roll: 0 }, animCameraOrbit: { theta: ORBIT_DEFAULT_THETA, phi: ORBIT_PHI, radiusPercent: ORBIT_RADIUS_PERCENT } },
+                { id: 'pommier', name: 'POMMIER', modelSrc: 'carte1.glb', arrowKey: 'ArrowRight', matched: false, isFlipped: false, animOrientation: { yaw: 0, pitch: 0, roll: 0 }, animCameraOrbit: { theta: ORBIT_DEFAULT_THETA, phi: ORBIT_PHI, radiusPercent: ORBIT_RADIUS_PERCENT } },
+                { id: 'tournesol', name: 'TOURNESOL', modelSrc: 'carte2.glb', arrowKey: 'ArrowDown', matched: false, isFlipped: false, animOrientation: { yaw: 0, pitch: 0, roll: 0 }, animCameraOrbit: { theta: ORBIT_DEFAULT_THETA, phi: ORBIT_PHI, radiusPercent: ORBIT_RADIUS_PERCENT } },
+                { id: 'lavande', name: 'LAVANDE', modelSrc: 'carte3.glb', arrowKey: 'ArrowLeft', matched: false, isFlipped: false, animOrientation: { yaw: 0, pitch: 0, roll: 0 }, animCameraOrbit: { theta: ORBIT_DEFAULT_THETA, phi: ORBIT_PHI, radiusPercent: ORBIT_RADIUS_PERCENT } }
+            ];
+
+            function shuffleArray(array) { 
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            shuffleArray(cardsData);
+
+            cardsData.forEach(cardData => {
+                const cardWrapper = document.createElement('div');
+                cardWrapper.classList.add('card-wrapper');
+                cardWrapper.dataset.id = cardData.id;
+
+                const modelViewer = document.createElement('model-viewer');
+                modelViewer.setAttribute('src', cardData.modelSrc);
+                modelViewer.setAttribute('alt', `Modèle 3D de ${cardData.name}`); // Garder l'alt pour l'accessibilité
+                modelViewer.setAttribute('disable-zoom', '');
+                modelViewer.orientation = `${cardData.animOrientation.yaw}deg ${cardData.animOrientation.pitch}deg ${cardData.animOrientation.roll}deg`;
+                modelViewer.cameraOrbit = `${cardData.animCameraOrbit.theta}deg ${cardData.animCameraOrbit.phi}deg ${ORBIT_RADIUS_STRING}`;
+                
+                modelViewer.setAttribute('environment-image', 'neutral'); 
+                modelViewer.setAttribute('exposure', '1.0'); 
+                modelViewer.setAttribute('shadow-intensity', '0.5');
+
+                const mainSpot = document.createElement('spot-light');
+                mainSpot.setAttribute('intensity', '4'); 
+                mainSpot.setAttribute('angle', '0.5');     
+                mainSpot.setAttribute('penumbra', '0.1');  
+                mainSpot.setAttribute('position', '0.7m 1.2m 0.9m'); 
+                mainSpot.setAttribute('color', '#FFFFFF'); 
+                mainSpot.setAttribute('cast-shadow', ''); 
+                modelViewer.appendChild(mainSpot);
+
+                const ambient = document.createElement('ambient-light');
+                ambient.setAttribute('intensity', '0.4'); 
+                modelViewer.appendChild(ambient);
+                
+                cardData.modelViewerInstance = modelViewer;
+
+                cardWrapper.appendChild(modelViewer);
+                gameBoard.appendChild(cardWrapper);
+
+                cardWrapper.addEventListener('click', () => {
+                    if (cardData.matched) return;
+                    if (activeCardData && activeCardData.id !== cardData.id) {
+                        if (activeCardElement) activeCardElement.classList.remove('selected');
+                        animateCameraOrbit(activeCardData, ORBIT_DEFAULT_THETA); 
+                        if (activeCardData.isFlipped && !activeCardData.matched) {
+                            activeCardData.isFlipped = false;
+                            animateCardFlip(activeCardData, 0); 
+                        }
+                    }
+                    animateCameraOrbit(cardData, ORBIT_SELECTED_THETA); 
+                    if (cardData.isFlipped) {
+                        cardData.isFlipped = false;
+                        animateCardFlip(cardData, 0, () => { 
+                            cardWrapper.classList.remove('selected');
+                            if (activeCardData && activeCardData.id === cardData.id) {
+                                activeCardData = null; activeCardElement = null;
+                            }
+                            feedbackMessageEl.textContent = `Prêt à jouer !`;
+                        });
+                    } else {
+                        cardData.isFlipped = true;
+                        animateCardFlip(cardData, 180, () => { 
+                            cardWrapper.classList.add('selected');
+                            activeCardData = cardData; 
+                            activeCardElement = cardWrapper;
+                            feedbackMessageEl.textContent = `Carte sélectionnée. Quelle flèche ?`;
+                        });
+                    }
+                    feedbackMessageEl.className = '';
+                });
+            });
+            
+            function animateCardFlip(targetCardData, targetYaw, onCompleteCallback) {
+                gsap.killTweensOf(targetCardData.animOrientation); 
+                targetCardData.animOrientation.pitch = 0;
+                targetCardData.animOrientation.roll = 0;
+                targetCardData.modelViewerInstance.orientation = 
+                            `${targetCardData.animOrientation.yaw}deg ${targetCardData.animOrientation.pitch}deg ${targetCardData.animOrientation.roll}deg`;
+                gsap.to(targetCardData.animOrientation, {
+                    yaw: targetYaw, duration: 1, ease: "power2.inOut",
+                    onUpdate: () => {
+                        targetCardData.modelViewerInstance.orientation = 
+                            `${targetCardData.animOrientation.yaw}deg ${targetCardData.animOrientation.pitch}deg ${targetCardData.animOrientation.roll}deg`;
+                    },
+                    onComplete: onCompleteCallback
+                });
+            }
+
+            function animateCameraOrbit(targetCardData, targetTheta, duration = 0.5, onCompleteCallback) {
+                gsap.killTweensOf(targetCardData.animCameraOrbit);
+                gsap.to(targetCardData.animCameraOrbit, {
+                    theta: targetTheta, phi: ORBIT_PHI, radiusPercent: ORBIT_RADIUS_PERCENT,
+                    duration: duration, ease: "sine.inOut",
+                    onUpdate: () => {
+                        targetCardData.modelViewerInstance.cameraOrbit = `${targetCardData.animCameraOrbit.theta}deg ${targetCardData.animCameraOrbit.phi}deg ${targetCardData.animCameraOrbit.radiusPercent}%`;
+                    },
+                    onComplete: onCompleteCallback
+                });
+            }
+
+            cardsData.forEach(cData => {
+                if (cData.modelViewerInstance) { 
+                    cData.modelViewerInstance.orientation = `${cData.animOrientation.yaw}deg ${cData.animOrientation.pitch}deg ${cData.animOrientation.roll}deg`;
+                    animateCameraOrbit(cData, ORBIT_DEFAULT_THETA, 0); 
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (!activeCardData || !activeCardData.isFlipped || activeCardData.matched) return;
+                const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+                if (arrowKeys.includes(event.key)) {
+                    event.preventDefault();
+                    if (event.key === activeCardData.arrowKey) {
+                        if(activeCardElement) activeCardElement.classList.add('matched'); 
+                        if(activeCardElement) activeCardElement.classList.remove('selected');
+                        activeCardData.matched = true;
+                        let successMessage = `Correct !`;
+                        if (activeCardData.name === 'TOURNESOL') { 
+                            successMessage = "Lien restauré entre Apis mellifera et Helianthus annuus.";
+                        }
+                        feedbackMessageEl.textContent = successMessage;
+                        feedbackMessageEl.className = 'success';
+                        activeCardData = null; activeCardElement = null;
+                        if (cardsData.every(c => c.matched)) { 
+                            feedbackMessageEl.textContent = "Félicitations ! Toutes les paires ont été trouvées !";
+                            feedbackMessageEl.className = 'success';
+                        }
+                    } else {
+                        feedbackMessageEl.textContent = `Incorrect. Essayez une autre flèche.`;
+                        feedbackMessageEl.className = 'error';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

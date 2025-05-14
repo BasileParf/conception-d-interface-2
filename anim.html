@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Système végétal corrompu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: 'Satoshi', sans-serif;
+      background: linear-gradient(-45deg, #d5c4f2, #a7c4f4, #f3d1e6, #bdb6f0);
+      background-size: 400% 400%;
+      animation: gradientMove 20s ease infinite;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .page-wrapper {
+      height: 100vh;
+      width: 100vw;
+      border: 12px solid #A279FE;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      padding: 2rem;
+    }
+    .video-placeholder {
+      width: 80%;
+      max-width: 900px;
+      height: 300px;
+      background: red;
+      margin-bottom: 2rem;
+    }
+    .text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+      max-width: 90%;
+    }
+    .ai-orb {
+      position: absolute;
+      bottom: 30px;
+      left: 10%;
+      width: 120px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="video-placeholder"></div>
+    <div class="text">
+      Système végétal corrompu. Les<br>
+      plantes s’éteignent...
+    </div>
+    <img src="boule_IA.png" alt="IA Orb" class="ai-orb">
+  </div>
+</body>
+</html>
