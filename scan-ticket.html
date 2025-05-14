@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan ticket temporel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Satoshi', sans-serif;
+      overflow: hidden;
+    }
+    .page-wrapper {
+      height: 100vh;
+      width: 100vw;
+      border: 12px solid #A279FE;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      background-size: 400% 400%;
+      animation: gradientMove 20s ease infinite;
+      position: relative;
+      padding: 2rem;
+    }
+
+    .scan-box {
+      width: 60%;
+      max-width: 500px;
+      height: 200px;
+      border: 8px solid #A279FE;
+      border-radius: 2rem;
+      box-shadow: 0 0 10px #A279FE, 0 0 20px #A279FE;
+      margin-bottom: 3rem;
+      transition: all 0.3s ease;
+    }
+    .scan-box.valid {
+      border-color: #00FF7F;
+      box-shadow: 0 0 10px #00FF7F, 0 0 20px #00FF7F;
+    }
+    .scan-box.invalid {
+      border-color: red;
+      box-shadow: 0 0 10px red, 0 0 20px red;
+    }
+    p {
+      font-size: 2rem;
+      font-weight: 700;
+      color: black;
+    }
+    .ai-orb {
+      position: absolute;
+      bottom: 20px;
+      left: 30px;
+      width: 130px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .video-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(85.5px);
+    -webkit-backdrop-filter: blur(85.5px);
+    z-index: -1; /* Juste au-dessus de la vidéo */
+    }
+
+    #background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    z-index: -2; /* Important : en arrière-plan */
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+    <div class="video-blur"></div>
+    <video autoplay muted loop playsinline id="background-video">
+        <source src="forme pour video_1.mp4" type="video/mp4">
+      </video>
+  <div class="page-wrapper" onclick="handlePageClick(event)">
+    <div class="scan-box" id="scanBox"></div>
+    <p>Agent, scanne ton ticket temporel<br>pour commencer.</p>
+    <img src="boule_IA.png" alt="IA Orb" class="ai-orb">
+  </div>
+
+  <script>
+    let redirectTimeout;
+
+    function handlePageClick(event) {
+      const box = document.getElementById('scanBox');
+      const boxRect = box.getBoundingClientRect();
+
+      if (
+        event.clientX >= boxRect.left &&
+        event.clientX <= boxRect.right &&
+        event.clientY >= boxRect.top &&
+        event.clientY <= boxRect.bottom
+      ) {
+        box.classList.remove('invalid');
+        box.classList.add('valid');
+        clearTimeout(redirectTimeout);
+        redirectTimeout = setTimeout(() => {
+          window.location.href = 'defis.html';
+        }, 5000);
+      } else {
+        box.classList.remove('valid');
+        box.classList.add('invalid');
+      }
+    }
+  </script>
+</body>
+</html>

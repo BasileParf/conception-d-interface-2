@@ -1,0 +1,63 @@
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Satoshi', sans-serif; overflow: hidden; }
+    .video-blur { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; backdrop-filter: blur(55.5px); -webkit-backdrop-filter: blur(55.5px); z-index: 0; }
+    #background-video { position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; width: auto; height: auto; object-fit: cover; z-index: -1; }
+    .page-wrapper { height: 100vh; width: 100vw; border: 12px solid #A279FE; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 20px; z-index: 1; overflow-y: auto; }
+    .game-container { padding: 20px; border-radius: 15px; text-align: center; width: 100%; max-width: 100%; color: black; display: flex; flex-direction: column; align-items: center; }
+    h1.game-title { font-size: 2.2rem; font-weight: 700; color: black; line-height: 1.3; margin-bottom: 15px; position: relative; display: inline-block; }
+    .highlight span { position: relative; z-index: 1; }
+    .highlight::after { content: ''; position: absolute; left: 0; bottom: 0.1em; width: 100%; height: 0.5em; background: #A279FE; box-shadow: 0 0 6px #A279FE, 0 0 10px #A279FE; z-index: 0; border-radius: 3px;}
+    .instructions { color: #1c1c1c; margin-bottom: 20px; font-size: 0.95em; line-height: 1.5; max-width: 800px; }
+    #game-board { display: flex; justify-content: space-around; align-items: stretch; width: 100%; gap: 15px; margin-bottom: 25px; }
+    
+    .card-wrapper { 
+        flex: 1; min-width: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: space-between; 
+        padding: 10px 5px; background-color: transparent; 
+        /* border: 3px solid transparent; */ /* Bordure transparente enlevée pour l'effet néon */
+        border-radius: 12px; 
+        cursor: pointer; 
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Ajout de box-shadow à la transition */
+        position: relative; /* Utile pour le z-index et positionnement potentiel de pseudo-éléments */
+    }
+    .card-wrapper:hover { 
+        transform: translateY(-3px) scale(1.01); 
+    }
+    .card-wrapper.selected { 
+        /* border-color: #A279FE; */ /* Bordure violette enlevée */
+        box-shadow: 
+            0 0 5px rgba(162, 121, 254, 0.9),
+            0 0 10px rgba(162, 121, 254, 0.7),
+            0 0 20px rgba(162, 121, 254, 0.5),
+            0 0 35px 5px rgba(162, 121, 254, 0.3);
+        transform: scale(1.03) translateY(-2px); /* Scale légèrement augmenté pour le néon */
+        z-index: 5; /* Pour que la carte sélectionnée et son néon soient au-dessus */
+    }
+
+    model-viewer { 
+        width: 95%; height: 30vh; max-height: 280px; min-height: 180px; 
+        border-radius: 8px; background-color: transparent; 
+        position: relative; /* Pour s'assurer qu'il est au-dessus du box-shadow du parent */
+        z-index: 1; /* Pour être au-dessus du néon du card-wrapper */
+    }
+    .card-name { margin-top: 10px; font-weight: 700; color: black; text-transform: uppercase; font-size: clamp(0.7em, 1.5vw, 0.85em); padding: 5px 0; }
+    #message-area { margin-top: 15px; padding: 15px 20px; background-color: rgba(0, 0, 0, 0.05); border-radius: 10px; min-height: 60px; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(0,0,0,0.1); }
+    #feedback-message { font-size: 1.2em; color: black; font-weight: 700; line-height: 1.4; }
+    #feedback-message.success { color: #28a745; }
+    #feedback-message.error { color: #dc3545; }
+    
+    .card-wrapper.matched { 
+        opacity: 0.7; 
+        cursor: default; 
+        /* border-color: #A279FE; */ /* Plus de bordure colorée pour matched si on utilise le néon ailleurs */
+        box-shadow: none; /* S'assurer que le néon disparaît */
+    }
+    .card-wrapper.matched:hover { transform: none; }
+    .card-wrapper.matched.selected { /* Cet état ne devrait plus être actif longtemps */
+        transform: scale(1);
+        box-shadow: none; 
+    }
+    .touch-icon { position: fixed; bottom: 30px; left: 30px; width: 100px; opacity: 0.5; animation: pulseSmooth 10s ease-in-out infinite; z-index: 10; }
+    @keyframes pulseSmooth { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+</style>
